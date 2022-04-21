@@ -4,6 +4,7 @@ import Image from "next/image";
 import Banner from "../components/Banner";
 import Card from "../components/card";
 import { fetchCoffeeStores } from "../lib/coffee-stores";
+import useTrackLocation from "../hooks/use-track-location";
 
 // getStaticProps: get a cached version from CDN
 // 룰1. can only be exported from page file
@@ -20,8 +21,13 @@ export async function getStaticProps(context) {
 
 // 룰1. 컴포넌트, 룰2. export
 export default function Home(props) {
+  const { handleTrackLocation, latLong, locationErrorMsg, isFindingLocation } =
+    useTrackLocation();
+
+  console.log({ latLong, locationErrorMsg });
+
   const handleOnBannerBtnClick = () => {
-    console.log("hi bannerBtn");
+    handleTrackLocation();
   };
 
   return (
@@ -34,9 +40,10 @@ export default function Home(props) {
 
       <main className={styles.main}>
         <Banner
-          buttonText={"View stores nearby"}
+          buttonText={isFindingLocation ? "Locating.." : "View stores nearby"}
           handleOnClick={handleOnBannerBtnClick}
         />
+        {locationErrorMsg && <p>Something went wrong: {locationErrorMsg}</p>}
         <div className={styles.heroImage}>
           <Image
             src="/static/heroimage.png"
@@ -46,7 +53,7 @@ export default function Home(props) {
           />
         </div>
         {props.coffeeStores.length > 0 && (
-          <>
+          <div className={styles.sectionWrapper}>
             <h2 className={styles.heading2}>Toronto stores</h2>
             <div className={styles.cardLayout}>
               {props.coffeeStores.map((coffeeStore) => {
@@ -63,7 +70,7 @@ export default function Home(props) {
                 );
               })}
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>

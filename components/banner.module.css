@@ -3,9 +3,6 @@
   margin-bottom: 1rem;
   position: relative;
   z-index: 2;
-
-  /* 강의랑 달라서 직접추가 */
-  margin-bottom: 6rem;
 }
 
 .title {
