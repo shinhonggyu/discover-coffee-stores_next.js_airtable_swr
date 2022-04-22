@@ -5,13 +5,15 @@ import Banner from "../components/Banner";
 import Card from "../components/card";
 import { fetchCoffeeStores } from "../lib/coffee-stores";
 import useTrackLocation from "../hooks/use-track-location";
+import { useEffect, useState } from "react";
 
 // getStaticProps: get a cached version from CDN
 // 룰1. can only be exported from page file
 // 룰2. meant for all routes
 // 서버에서 불려지므로 원하는 서버코드 가능. 클라이언트 소스(번들)에 포함x
 export async function getStaticProps(context) {
-  const coffeeStores = await fetchCoffeeStores();
+  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 7);
+
   return {
     props: {
       coffeeStores,
@@ -24,7 +26,32 @@ export default function Home(props) {
   const { handleTrackLocation, latLong, locationErrorMsg, isFindingLocation } =
     useTrackLocation();
 
-  console.log({ latLong, locationErrorMsg });
+  console.log({ latLong });
+
+  const [coffeeStores, setCoffeeStores] = useState("");
+  const [coffeeStoresError, setCoffeeStoresError] = useState(null);
+
+  useEffect(() => {
+    const setCoffeeStoresByLocation = async () => {
+      if (latLong) {
+        try {
+          const fetchedCoffeeStores = await fetchCoffeeStores(
+            latLong,
+            "커피",
+            30
+          );
+          setCoffeeStores(fetchedCoffeeStores);
+          // set coffee stores
+        } catch (error) {
+          console.log({ error });
+          setCoffeeStoresError(error.message);
+          // set error
+        }
+      }
+    };
+
+    setCoffeeStoresByLocation();
+  }, [latLong]);
 
   const handleOnBannerBtnClick = () => {
     handleTrackLocation();
@@ -44,6 +71,7 @@ export default function Home(props) {
           handleOnClick={handleOnBannerBtnClick}
         />
         {locationErrorMsg && <p>Something went wrong: {locationErrorMsg}</p>}
+        {coffeeStoresError && <p>Something went wrong: {coffeeStoresError}</p>}
         <div className={styles.heroImage}>
           <Image
             src="/static/heroimage.png"
@@ -52,6 +80,28 @@ export default function Home(props) {
             alt="hero"
           />
         </div>
+
+        {coffeeStores.length > 0 && (
+          <div className={styles.sectionWrapper}>
+            <h2 className={styles.heading2}>Stores near me</h2>
+            <div className={styles.cardLayout}>
+              {coffeeStores.map((coffeeStore) => {
+                return (
+                  <Card
+                    key={coffeeStore.id}
+                    name={coffeeStore.name}
+                    imgUrl={
+                      coffeeStore.imgUrl ||
+                      "https://images.unsplash.com/photo-1504753793650-d4a2b783c15e?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=2000&q=80"
+                    }
+                    href={`/coffee-store/${coffeeStore.id}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {props.coffeeStores.length > 0 && (
           <div className={styles.sectionWrapper}>
             <h2 className={styles.heading2}>Toronto stores</h2>

@@ -8,18 +8,21 @@ import { fetchCoffeeStores } from "../../lib/coffee-stores";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
-  const coffeeStores = await fetchCoffeeStores();
+
+  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 7);
+  const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
+    return coffeStore.id.toString() === params.id;
+  });
+
   return {
     props: {
-      coffeeStore: coffeeStores.find((coffeStore) => {
-        return coffeStore.id.toString() === params.id;
-      }),
+      coffeeStore: findCoffeeStoreById ? findCoffeeStoreById : {},
     },
   };
 }
 
 export async function getStaticPaths() {
-  const coffeeStores = await fetchCoffeeStores();
+  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 7);
   const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {

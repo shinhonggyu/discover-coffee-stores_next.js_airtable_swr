@@ -1,15 +1,16 @@
 import { useState } from "react";
+// import {  } from
 
 const useTrackLocation = () => {
   const [locationErrorMsg, setLocationErrorMsg] = useState("");
-  const [latLong, setLatLong] = useState("");
+  // const [latLong, setLatLong] = useState("");
   const [isFindingLocation, setIsFindingLocation] = useState(false);
 
   const success = (position) => {
     const latitude = position.coords.latitude;
     const longitude = position.coords.longitude;
 
-    setLatLong(`${latitude}, ${longitude}`);
+    // setLatLong(`${latitude},${longitude}`);
     setLocationErrorMsg("");
     setIsFindingLocation(false);
   };
@@ -37,5 +38,4 @@ const useTrackLocation = () => {
     isFindingLocation,
   };
 };
-
 export default useTrackLocation;
