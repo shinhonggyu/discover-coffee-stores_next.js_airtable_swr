@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
@@ -5,6 +6,8 @@ import Image from "next/image";
 import cls from "classnames";
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
+import { useStoreState } from "../../store/store-context";
+import { isEmpty } from "../../utils";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
@@ -38,14 +41,35 @@ export async function getStaticPaths() {
   };
 }
 
-const CoffeeStore = (props) => {
+const CoffeeStore = (initialProps) => {
   const router = useRouter();
+  const { coffeeStores } = useStoreState();
+  const [coffeeStore, setCoffeeStore] = useState(
+    initialProps.coffeeStore || {}
+  );
+  const id = router.query.id;
 
+  console.log("initialProps.coffeeStore", initialProps.coffeeStore);
+
+  useEffect(() => {
+    if (isEmpty(initialProps.coffeeStore || {})) {
+      if (coffeeStores.length > 0) {
+        const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
+          return coffeStore.id.toString() === id;
+        });
+        setCoffeeStore(findCoffeeStoreById);
+      }
+    }
+  }, [id, coffeeStores, initialProps.coffeeStore]);
+
+  console.log("coffeeStore", coffeeStore);
+
+  const { name, address, neighbourhood, imgUrl } = coffeeStore;
+
+  // getStaticPaths 에 없고 fallback: true
   if (router.isFallback) {
-    return <div>Loading..</div>;
+    return <div>로딩중입니다...</div>;
   }
-
-  const { name, address, neighbourhood, imgUrl } = props.coffeeStore;
 
   const handleUpvoteBtn = () => {
     console.log("handleUpvoteBtn");

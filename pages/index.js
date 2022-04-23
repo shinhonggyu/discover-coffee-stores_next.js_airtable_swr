@@ -6,6 +6,11 @@ import Card from "../components/card";
 import { fetchCoffeeStores } from "../lib/coffee-stores";
 import useTrackLocation from "../hooks/use-track-location";
 import { useEffect, useState } from "react";
+import {
+  useStoreDispatch,
+  ACTION_TYPES,
+  useStoreState,
+} from "../store/store-context";
 
 // getStaticProps: get a cached version from CDN
 // 룰1. can only be exported from page file
@@ -23,24 +28,34 @@ export async function getStaticProps(context) {
 
 // 룰1. 컴포넌트, 룰2. export
 export default function Home(props) {
-  const { handleTrackLocation, latLong, locationErrorMsg, isFindingLocation } =
+  const { handleTrackLocation, locationErrorMsg, isFindingLocation } =
     useTrackLocation();
 
-  console.log({ latLong });
-
-  const [coffeeStores, setCoffeeStores] = useState("");
+  // const [coffeeStores, setCoffeeStores] = useState("");
   const [coffeeStoresError, setCoffeeStoresError] = useState(null);
+
+  const dispatch = useStoreDispatch();
+  const { coffeeStores, latLong } = useStoreState();
+  console.log({ coffeeStores, latLong });
 
   useEffect(() => {
     const setCoffeeStoresByLocation = async () => {
       if (latLong) {
         try {
-          const fetchedCoffeeStores = await fetchCoffeeStores(
-            latLong,
-            "커피",
-            30
+          const response = await fetch(
+            `api/getCoffeeStoresByLocation?latLong=${latLong}&query=커피&limit=30`
           );
-          setCoffeeStores(fetchedCoffeeStores);
+          const coffeeStores = await response.json();
+
+          // setCoffeeStores(fetchedCoffeeStores);
+
+          dispatch({
+            type: ACTION_TYPES.SET_COFFEE_STORES,
+            payload: {
+              coffeeStores,
+            },
+          });
+          setCoffeeStoresError("");
           // set coffee stores
         } catch (error) {
           console.log({ error });
@@ -51,7 +66,7 @@ export default function Home(props) {
     };
 
     setCoffeeStoresByLocation();
-  }, [latLong]);
+  }, [latLong, dispatch]);
 
   const handleOnBannerBtnClick = () => {
     handleTrackLocation();
