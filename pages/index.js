@@ -11,13 +11,18 @@ import {
   ACTION_TYPES,
   useStoreState,
 } from "../store/store-context";
+// 기본적으로 모든 페이지 pre-render
+// 언제 HTML 을 만드냐가 차이점.
+// 1. Static Generation (빌드 시) - cdn cache
+// 2. Server-side Rendering (요청 시) - 최신, admin
 
+// 빌드시 서버측에서 불려지며 함수에서 반환된 props를 사용하여 이 페이지를 미리 pre-render한다.
 // getStaticProps: get a cached version from CDN
 // 룰1. can only be exported from page file
 // 룰2. meant for all routes
-// 서버에서 불려지므로 원하는 서버코드 가능. 클라이언트 소스(번들)에 포함x
+// 서버에서 불려지므로 DB에서 데이터 가져오기 포함, 원하는 서버코드 가능. 클라이언트 소스(번들)에 포함x
 export async function getStaticProps(context) {
-  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 7);
+  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
 
   return {
     props: {

@@ -10,9 +10,10 @@ import { useStoreState } from "../../store/store-context";
 import { isEmpty } from "../../utils";
 
 export async function getStaticProps(staticProps) {
+  console.log("getStaticProps");
   const params = staticProps.params;
 
-  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 7);
+  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
   const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
     return coffeStore.id.toString() === params.id;
   });
@@ -24,8 +25,12 @@ export async function getStaticProps(staticProps) {
   };
 }
 
+// 빌드 시 정적으로 생성할 paths 리스트를 정의해야 한다.
+// getStaticPaths에 의해 지정된 모든 paths를 정적으로 pre-render 한다.
+// 프로덕션 환경에서 빌드하는 동안에만 실행.
 export async function getStaticPaths() {
-  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 7);
+  console.log("getStaticPaths");
+  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
   const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {
@@ -42,6 +47,7 @@ export async function getStaticPaths() {
 }
 
 const CoffeeStore = (initialProps) => {
+  console.log("CoffeeStore 렌더링");
   const router = useRouter();
   const { coffeeStores } = useStoreState();
   const [coffeeStore, setCoffeeStore] = useState(
@@ -50,10 +56,11 @@ const CoffeeStore = (initialProps) => {
   const id = router.query.id;
 
   console.log("initialProps.coffeeStore", initialProps.coffeeStore);
-
+  console.log("coffeeStores", coffeeStores);
   useEffect(() => {
     if (isEmpty(initialProps.coffeeStore || {})) {
       if (coffeeStores.length > 0) {
+        console.log("useEffect");
         const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
           return coffeStore.id.toString() === id;
         });
@@ -66,7 +73,8 @@ const CoffeeStore = (initialProps) => {
 
   const { name, address, neighbourhood, imgUrl } = coffeeStore;
 
-  // getStaticPaths 에 없고 fallback: true
+  // 새로고참시 getStaticProps보다 먼저 렌더링
+  console.log(router.isFallback);
   if (router.isFallback) {
     return <div>로딩중입니다...</div>;
   }
