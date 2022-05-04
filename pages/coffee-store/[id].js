@@ -9,8 +9,8 @@ import { fetchCoffeeStores } from "../../lib/coffee-stores";
 import { useStoreState } from "../../store/store-context";
 import { isEmpty } from "../../utils";
 
+// 빌드시 서버에서 실행 -> generate static html -> cdn catch
 export async function getStaticProps(staticProps) {
-  console.log("getStaticProps");
   const params = staticProps.params;
 
   const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
@@ -25,11 +25,12 @@ export async function getStaticProps(staticProps) {
   };
 }
 
-// 빌드 시 정적으로 생성할 paths 리스트를 정의해야 한다.
-// getStaticPaths에 의해 지정된 모든 paths를 정적으로 pre-render 한다.
-// 프로덕션 환경에서 빌드하는 동안에만 실행.
+// pre-render, build시 서버에서 실행 generate static html store cdn
+// Does route exist in getStaticPaths?
+// fallback:true -> with router.isFallback -> Loading -> getStaticProps다시실행 -> fail to load static props
+// empty object 로 에러처리 -> context
+// 첫번째 유저 방문(로딩) 뒤 static file 생성후 cdn 저장 , 두번째 방문 유저 바로 catch 된 static html 볼수있음.
 export async function getStaticPaths() {
-  console.log("getStaticPaths");
   const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
   const paths = coffeeStores.map((coffeeStore) => {
     return {
@@ -39,15 +40,12 @@ export async function getStaticPaths() {
     };
   });
   return {
-    // pre render
     paths,
-    // after first user access , cache to CDN
     fallback: true,
   };
 }
 
 const CoffeeStore = (initialProps) => {
-  console.log("CoffeeStore 렌더링");
   const router = useRouter();
   const { coffeeStores } = useStoreState();
   const [coffeeStore, setCoffeeStore] = useState(
@@ -55,12 +53,9 @@ const CoffeeStore = (initialProps) => {
   );
   const id = router.query.id;
 
-  console.log("initialProps.coffeeStore", initialProps.coffeeStore);
-  console.log("coffeeStores", coffeeStores);
   useEffect(() => {
     if (isEmpty(initialProps.coffeeStore || {})) {
       if (coffeeStores.length > 0) {
-        console.log("useEffect");
         const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
           return coffeStore.id.toString() === id;
         });
@@ -69,12 +64,8 @@ const CoffeeStore = (initialProps) => {
     }
   }, [id, coffeeStores, initialProps.coffeeStore]);
 
-  console.log("coffeeStore", coffeeStore);
-
   const { name, address, neighbourhood, imgUrl } = coffeeStore;
 
-  // 새로고참시 getStaticProps보다 먼저 렌더링
-  console.log(router.isFallback);
   if (router.isFallback) {
     return <div>로딩중입니다...</div>;
   }
