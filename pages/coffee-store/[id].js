@@ -3,19 +3,24 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import Head from "next/head";
 import Image from "next/image";
+
 import cls from "classnames";
+
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
+
 import { useStoreState } from "../../store/store-context";
+
 import { isEmpty } from "../../utils";
 
 // 빌드시 서버에서 실행 -> generate static html -> cdn catch
 export async function getStaticProps(staticProps) {
+  console.log("GETSTATICPROPS");
   const params = staticProps.params;
 
   const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
-  const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
-    return coffeStore.id.toString() === params.id;
+  const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
+    return coffeeStore.id.toString() === params.id;
   });
 
   return {
@@ -28,9 +33,10 @@ export async function getStaticProps(staticProps) {
 // pre-render, build시 서버에서 실행 generate static html store cdn
 // Does route exist in getStaticPaths?
 // fallback:true -> with router.isFallback -> Loading -> getStaticProps다시실행 -> fail to load static props
-// empty object 로 에러처리 -> context
+// {} 로 에러처리 -> context
 // 첫번째 유저 방문(로딩) 뒤 static file 생성후 cdn 저장 , 두번째 방문 유저 바로 catch 된 static html 볼수있음.
 export async function getStaticPaths() {
+  console.log("GETSTATICPATHS");
   const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
   const paths = coffeeStores.map((coffeeStore) => {
     return {
@@ -45,7 +51,14 @@ export async function getStaticPaths() {
   };
 }
 
+// pre-render -> paths -> props -> { initialProps: { coffeeStore: { DATA } } }
+
+// no pre-render -> 새로고침x -> paths -> props -> { initialProps: { coffeeStore: {} } } -> useEffect
+
+// no pre-render -> 새로고침o -> paths -> { initialProps: {} } -> router.isFallback true -> useEffect
+// paths -> props -> { initialProps: { coffeeStore: {} } } -> useEffect
 const CoffeeStore = (initialProps) => {
+  console.log({ initialProps });
   const router = useRouter();
   const { coffeeStores } = useStoreState();
   const [coffeeStore, setCoffeeStore] = useState(
@@ -53,20 +66,57 @@ const CoffeeStore = (initialProps) => {
   );
   const id = router.query.id;
 
-  useEffect(() => {
-    if (isEmpty(initialProps.coffeeStore || {})) {
-      if (coffeeStores.length > 0) {
-        const findCoffeeStoreById = coffeeStores.find((coffeStore) => {
-          return coffeStore.id.toString() === id;
-        });
-        setCoffeeStore(findCoffeeStoreById);
-      }
+  const handleCreateCoffeeStore = async (coffeeStore) => {
+    const { id, name, address, neighbourhood, voting, imgUrl } = coffeeStore;
+    try {
+      const response = await fetch("/api/createCoffeeStore", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id,
+          name,
+          address: address || "",
+          neighbourhood: neighbourhood || "",
+          voting: 0,
+          imgUrl,
+        }),
+      });
+
+      const dbCoffeeStore = await response.json();
+      console.log({ dbCoffeeStore });
+    } catch (err) {
+      console.error("Error creating coffee store", err);
     }
-  }, [id, coffeeStores, initialProps.coffeeStore]);
+  };
+
+  useEffect(() => {
+    console.log("initialProps.coffeeStore", initialProps.coffeeStore);
+    if (isEmpty(initialProps.coffeeStore || {})) {
+      console.log("useEffect1");
+      if (coffeeStores.length > 0) {
+        console.log("useEffect2");
+        const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
+          return coffeeStore.id.toString() === id;
+        });
+
+        if (coffeeStoreFromContext) {
+          setCoffeeStore(coffeeStoreFromContext);
+          handleCreateCoffeeStore(coffeeStoreFromContext);
+        }
+      }
+    } else {
+      // SSG pre-render
+      console.log("pre-render page");
+      handleCreateCoffeeStore(initialProps.coffeeStore);
+    }
+  }, [id, coffeeStores, initialProps, initialProps.coffeeStore]);
 
   const { name, address, neighbourhood, imgUrl } = coffeeStore;
 
   if (router.isFallback) {
+    console.log(router.isFallback);
     return <div>로딩중입니다...</div>;
   }
 

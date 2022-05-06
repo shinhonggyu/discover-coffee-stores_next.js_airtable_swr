@@ -35,7 +35,6 @@ export default function Home(props) {
 
   const dispatch = useStoreDispatch();
   const { coffeeStores, latLong } = useStoreState();
-  console.log({ coffeeStores, latLong });
 
   useEffect(() => {
     const setCoffeeStoresByLocation = async () => {
