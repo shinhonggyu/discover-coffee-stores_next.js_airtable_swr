@@ -1,14 +1,7 @@
 import { table, getMinifiedRecords } from "../../lib/airtable";
 
-// Find if this id exist ?
-// YES -> don't create a store but just return that store
-// NO -> create that store
-
-// List recodrs and Filter
 const createCoffeeStore = async (req, res) => {
   if (req.method === "POST") {
-    // find a record
-
     const { id, name, address, neighbourhood, voting, imgUrl } = req.body;
 
     try {

@@ -67,7 +67,8 @@ const CoffeeStore = (initialProps) => {
   const id = router.query.id;
 
   const handleCreateCoffeeStore = async (coffeeStore) => {
-    const { id, name, address, neighbourhood, voting, imgUrl } = coffeeStore;
+    const { id, name, address, neighbourhood, imgUrl } = coffeeStore;
+
     try {
       const response = await fetch("/api/createCoffeeStore", {
         method: "POST",
@@ -115,14 +116,17 @@ const CoffeeStore = (initialProps) => {
 
   const { name, address, neighbourhood, imgUrl } = coffeeStore;
 
+  const [votingCount, setVotingCount] = useState(1);
+
+  const handleUpvoteBtn = () => {
+    let count = votingCount + 1;
+    setVotingCount(count);
+  };
+
   if (router.isFallback) {
     console.log(router.isFallback);
     return <div>로딩중입니다...</div>;
   }
-
-  const handleUpvoteBtn = () => {
-    console.log("handleUpvoteBtn");
-  };
 
   return (
     <div className={styles.layout}>
@@ -181,7 +185,7 @@ const CoffeeStore = (initialProps) => {
               height={24}
               alt="iconImg"
             />
-            <p className={styles.text}>1</p>
+            <p className={styles.text}>{votingCount}</p>
           </div>
 
           <button className={styles.upvoteButton} onClick={handleUpvoteBtn}>
