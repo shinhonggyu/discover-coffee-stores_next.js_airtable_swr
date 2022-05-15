@@ -13,12 +13,10 @@ import { useStoreState } from "../../store/store-context";
 
 import { isEmpty } from "../../utils";
 
-// 빌드시 서버에서 실행 -> generate static html -> cdn catch
 export async function getStaticProps(staticProps) {
-  console.log("GETSTATICPROPS");
   const params = staticProps.params;
 
-  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
+  const coffeeStores = await fetchCoffeeStores(undefined, "카페", 6);
   const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
     return coffeeStore.id.toString() === params.id;
   });
@@ -30,14 +28,8 @@ export async function getStaticProps(staticProps) {
   };
 }
 
-// pre-render, build시 서버에서 실행 generate static html store cdn
-// Does route exist in getStaticPaths?
-// fallback:true -> with router.isFallback -> Loading -> getStaticProps다시실행 -> fail to load static props
-// {} 로 에러처리 -> context
-// 첫번째 유저 방문(로딩) 뒤 static file 생성후 cdn 저장 , 두번째 방문 유저 바로 catch 된 static html 볼수있음.
 export async function getStaticPaths() {
-  console.log("GETSTATICPATHS");
-  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
+  const coffeeStores = await fetchCoffeeStores(undefined, "카페", 6);
   const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {
@@ -51,14 +43,7 @@ export async function getStaticPaths() {
   };
 }
 
-// pre-render -> paths -> props -> { initialProps: { coffeeStore: { DATA } } }
-
-// no pre-render -> 새로고침x -> paths -> props -> { initialProps: { coffeeStore: {} } } -> useEffect
-
-// no pre-render -> 새로고침o -> paths -> { initialProps: {} } -> router.isFallback true -> useEffect
-// paths -> props -> { initialProps: { coffeeStore: {} } } -> useEffect
 const CoffeeStore = (initialProps) => {
-  console.log({ initialProps });
   const router = useRouter();
   const { coffeeStores } = useStoreState();
   const [coffeeStore, setCoffeeStore] = useState(
@@ -86,18 +71,14 @@ const CoffeeStore = (initialProps) => {
       });
 
       const dbCoffeeStore = await response.json();
-      console.log({ dbCoffeeStore });
     } catch (err) {
       console.error("Error creating coffee store", err);
     }
   };
 
   useEffect(() => {
-    console.log("initialProps.coffeeStore", initialProps.coffeeStore);
     if (isEmpty(initialProps.coffeeStore || {})) {
-      console.log("useEffect1");
       if (coffeeStores.length > 0) {
-        console.log("useEffect2");
         const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
           return coffeeStore.id.toString() === id;
         });
@@ -109,7 +90,6 @@ const CoffeeStore = (initialProps) => {
       }
     } else {
       // SSG pre-render
-      console.log("pre-render page");
       handleCreateCoffeeStore(initialProps.coffeeStore);
     }
   }, [id, coffeeStores, initialProps, initialProps.coffeeStore]);
@@ -124,7 +104,6 @@ const CoffeeStore = (initialProps) => {
   };
 
   if (router.isFallback) {
-    console.log(router.isFallback);
     return <div>로딩중입니다...</div>;
   }
 

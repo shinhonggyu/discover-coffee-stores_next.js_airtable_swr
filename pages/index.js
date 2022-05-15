@@ -16,7 +16,7 @@ import {
 // You should not fetch an api route (intenal api) from getStaticProps --instead,
 // you can write the server-side code directly in getStaticProps
 export async function getStaticProps(context) {
-  const coffeeStores = await fetchCoffeeStores(undefined, "coffee store", 8);
+  const coffeeStores = await fetchCoffeeStores(undefined, "카페", 6);
 
   return {
     props: {
@@ -56,7 +56,7 @@ export default function Home(props) {
           setCoffeeStoresError("");
           // set coffee stores
         } catch (error) {
-          console.log({ error });
+          console.log("error", error);
           setCoffeeStoresError(error.message);
           // set error
         }
@@ -117,7 +117,7 @@ export default function Home(props) {
 
         {props.coffeeStores.length > 0 && (
           <div className={styles.sectionWrapper}>
-            <h2 className={styles.heading2}>Toronto stores</h2>
+            <h2 className={styles.heading2}>Seoul stores</h2>
             <div className={styles.cardLayout}>
               {props.coffeeStores.map((coffeeStore) => {
                 return (
