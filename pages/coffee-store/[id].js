@@ -6,6 +6,8 @@ import Image from "next/image";
 
 import cls from "classnames";
 
+import useSWR from "swr";
+
 import styles from "../../styles/coffee-store.module.css";
 import { fetchCoffeeStores } from "../../lib/coffee-stores";
 
@@ -71,6 +73,7 @@ const CoffeeStore = (initialProps) => {
       });
 
       const dbCoffeeStore = await response.json();
+      console.log({ dbCoffeeStore });
     } catch (err) {
       console.error("Error creating coffee store", err);
     }
@@ -98,10 +101,26 @@ const CoffeeStore = (initialProps) => {
 
   const [votingCount, setVotingCount] = useState(1);
 
+  const fetcher = (url) => fetch(url).then((res) => res.json());
+
+  const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      console.log("data from SWR", data);
+      setCoffeeStore(data[0]);
+      setVotingCount(data[0].voting);
+    }
+  }, [data]);
+
   const handleUpvoteBtn = () => {
     let count = votingCount + 1;
     setVotingCount(count);
   };
+
+  if (error) {
+    return <div>Something went wrong retrieving coffee store page</div>;
+  }
 
   if (router.isFallback) {
     return <div>로딩중입니다...</div>;
