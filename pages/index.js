@@ -21,16 +21,14 @@ export async function getStaticProps(context) {
   return {
     props: {
       coffeeStores,
-    }, // will be passed to the page component as props
+    },
   };
 }
 
-// 룰1. 컴포넌트, 룰2. export
 export default function Home(props) {
   const { handleTrackLocation, locationErrorMsg, isFindingLocation } =
     useTrackLocation();
 
-  // const [coffeeStores, setCoffeeStores] = useState("");
   const [coffeeStoresError, setCoffeeStoresError] = useState(null);
 
   const dispatch = useStoreDispatch();
@@ -45,8 +43,6 @@ export default function Home(props) {
           );
           const coffeeStores = await response.json();
 
-          // setCoffeeStores(fetchedCoffeeStores);
-
           dispatch({
             type: ACTION_TYPES.SET_COFFEE_STORES,
             payload: {
@@ -54,11 +50,9 @@ export default function Home(props) {
             },
           });
           setCoffeeStoresError("");
-          // set coffee stores
         } catch (error) {
           console.log("error", error);
           setCoffeeStoresError(error.message);
-          // set error
         }
       }
     };
