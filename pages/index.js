@@ -16,7 +16,7 @@ import {
 // You should not fetch an api route (intenal api) from getStaticProps --instead,
 // you can write the server-side code directly in getStaticProps
 export async function getStaticProps(context) {
-  const coffeeStores = await fetchCoffeeStores(undefined, "카페", 6);
+  const coffeeStores = await fetchCoffeeStores();
 
   return {
     props: {

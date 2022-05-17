@@ -13,12 +13,12 @@ import { fetchCoffeeStores } from "../../lib/coffee-stores";
 
 import { useStoreState } from "../../store/store-context";
 
-import { isEmpty } from "../../utils";
+import { isEmpty, fetcher } from "../../utils";
 
 export async function getStaticProps(staticProps) {
   const params = staticProps.params;
 
-  const coffeeStores = await fetchCoffeeStores(undefined, "카페", 6);
+  const coffeeStores = await fetchCoffeeStores();
   const findCoffeeStoreById = coffeeStores.find((coffeeStore) => {
     return coffeeStore.id.toString() === params.id;
   });
@@ -31,7 +31,7 @@ export async function getStaticProps(staticProps) {
 }
 
 export async function getStaticPaths() {
-  const coffeeStores = await fetchCoffeeStores(undefined, "카페", 6);
+  const coffeeStores = await fetchCoffeeStores();
   const paths = coffeeStores.map((coffeeStore) => {
     return {
       params: {
@@ -78,7 +78,7 @@ const CoffeeStore = (initialProps) => {
   };
 
   useEffect(() => {
-    if (isEmpty(initialProps.coffeeStore || {})) {
+    if (isEmpty(initialProps.coffeeStore)) {
       if (coffeeStores.length > 0) {
         const coffeeStoreFromContext = coffeeStores.find((coffeeStore) => {
           return coffeeStore.id.toString() === id;
@@ -95,20 +95,28 @@ const CoffeeStore = (initialProps) => {
     }
   }, [id, coffeeStores, initialProps, initialProps.coffeeStore]);
 
-  const { name, address, neighbourhood, imgUrl } = coffeeStore;
+  const {
+    name = "",
+    address = "",
+    neighbourhood = "",
+    imgUrl = "",
+  } = coffeeStore;
 
   const [votingCount, setVotingCount] = useState(0);
-
-  const fetcher = (url) => fetch(url).then((res) => res.json());
 
   const { data, error } = useSWR(`/api/getCoffeeStoreById?id=${id}`, fetcher);
 
   useEffect(() => {
     if (data && data.length > 0) {
       setCoffeeStore(data[0]);
+
       setVotingCount(data[0].voting);
     }
   }, [data]);
+
+  if (router.isFallback) {
+    return <div>로딩중입니다...</div>;
+  }
 
   const handleUpvoteBtn = async () => {
     try {
@@ -135,10 +143,6 @@ const CoffeeStore = (initialProps) => {
 
   if (error) {
     return <div>Something went wrong retrieving coffee store page</div>;
-  }
-
-  if (router.isFallback) {
-    return <div>로딩중입니다...</div>;
   }
 
   return (
